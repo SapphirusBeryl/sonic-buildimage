@@ -129,7 +129,7 @@ portmap_119.0=117:100
 portmap_123.0=121:100
 portmap_127.0=125:100
 # Port 33: 10G management
-#portmap_66.0=129:10:m
+portmap_66.0=129:10:m
 
 #wc0 lane swap
 phy_chain_tx_lane_map_physical{1.0}=0x0132
