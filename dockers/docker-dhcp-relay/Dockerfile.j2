@@ -10,8 +10,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Pass the image_version to container
 ENV IMAGE_VERSION=$image_version
 
-# Update apt's cache of available packages
-RUN apt-get update
+# Update apt's cache of available packages and install dhcp-helper
+RUN apt-get update && apt-get install dhcp-helper
 
 {% if docker_dhcp_relay_debs.strip() -%}
 # Copy built Debian packages
