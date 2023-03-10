@@ -4,8 +4,14 @@
 {%   for vnet_name, vnet_metadata in VNET.items() %}
 vrf {{ vnet_name }}
 vni {{ vnet_metadata['vni'] }}
+{%    if BGP_GLOBALS is defined and vnet_name in BGP_GLOBALS and 'route_map' in BGP_GLOBALS[vnet_name] %}
+ip protocol bgp route-map {{ BGP_GLOBALS[vnet_name]['route_map'] }}
+{%    endif %}
 !
 {%   endfor %}
+{%  endif %}
+{%  if BGP_GLOBALS is defined and 'default' in BGP_GLOBALS and 'route_map' in BGP_GLOBALS['default'] %}
+ip protocol bgp route-map {{ BGP_GLOBALS['default']['route_map'] }}
 {%  endif %}
 {% endblock vrf %}
 !

@@ -25,6 +25,11 @@ bgp as-path access-list {{key}} permit {{path}}
 {% for vrf, bgp_sess in BGP_GLOBALS.items() %}
 {% if 'local_asn' in bgp_sess %}
 !
+{% if 'route-map' in bgp_sess %}
+vrf {{ vrf }}
+ ip protocol bgp route-map {{ bgp_sess['route_map'] }}
+exit-vrf
+{% endif %}
 {% if vrf == 'default' %}
 router bgp {{ bgp_sess['local_asn']}}
 {% else %}
