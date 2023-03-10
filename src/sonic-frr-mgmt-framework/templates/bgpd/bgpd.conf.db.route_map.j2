@@ -145,6 +145,9 @@ route-map {{rm_key[0]}} {{rm_val['route_operation']}} {{rm_key[1]}}
 {% if 'set_origin' in rm_val %}
  set origin {{rm_val['set_origin']|lower}}
 {% endif %}
+{% if 'set_src' in rm_val %}
+ set src {{rm_val['set_src']}}
+{% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}

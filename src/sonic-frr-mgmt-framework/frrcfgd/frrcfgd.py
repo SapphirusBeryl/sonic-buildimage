@@ -1866,6 +1866,7 @@ class BGPConfigDaemon:
                          ('call_route_map',                 '{no:no-prefix}call {:enable-only}'),
                          ('set_origin',                     '[bgpd]{no:no-prefix}set origin {:tolower}'),
                          ('set_local_pref',                 '[bgpd]{no:no-prefix}set local-preference {}'),
+                         ('set_src',                        '{no:no-prefix}set src {}'),
                          ('set_next_hop',                   '{no:no-prefix}set ip next-hop {}'),
                          ('set_ipv6_next_hop_global',       '[bgpd]{no:no-prefix}set ipv6 next-hop global {}'),
                          ('set_ipv6_next_hop_prefer_global', '[bgpd]{no:no-prefix}set ipv6 next-hop prefer-global', ['true', 'false']),
