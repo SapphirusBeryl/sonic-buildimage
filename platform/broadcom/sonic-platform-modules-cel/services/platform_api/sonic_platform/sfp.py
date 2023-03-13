@@ -21,6 +21,7 @@ try:
     from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_InterfaceId
     from sonic_platform_base.sonic_sfp.qsfp_dd import qsfp_dd_Dom
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
+    from sonic_platform_base.sonic_xcvr.xcvr_api_factory import XcvrApiFactory
     from sonic_platform.common import Common
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -242,6 +243,8 @@ class Sfp(SfpBase):
         self._config = conf
         self._api_common = Common(self._config)
 
+        self._xcvr_api_factory = XcvrApiFactory(self.read_eeprom, self.write_eeprom)
+
         self._read_porttab_mappings()
         self._dom_capability_detect()
 
@@ -280,6 +283,9 @@ class Sfp(SfpBase):
             return float(t_str)
         else:
             return Common.NULL_VAL
+
+    def read_eeprom(self, offset, num_bytes):
+        return self._read_eeprom_specific_bytes(offset, num_bytes)
 
     def _read_eeprom_specific_bytes(self, offset, num_bytes):
         sysfsfile_eeprom = None
