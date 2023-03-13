@@ -11,8 +11,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Pass the image_version to container
 ENV IMAGE_VERSION=$image_version
 
-# Update apt's cache of available packages
-RUN apt-get update
+# Update apt's cache of available packages and install dhcp-helper
+RUN apt-get update && apt-get install -y dhcp-helper
 
 {% if docker_dhcp_relay_debs.strip() -%}
 # Copy built Debian packages
@@ -26,7 +26,7 @@ RUN apt-get update
 
 COPY ["docker_init.sh", "start.sh", "/usr/bin/"]
 COPY ["docker-dhcp-relay.supervisord.conf.j2", "port-name-alias-map.txt.j2", "wait_for_intf.sh.j2", "/usr/share/sonic/templates/"]
-COPY ["dhcp-relay.programs.j2", "dhcpv4-relay.agents.j2", "dhcpv6-relay.agents.j2", "dhcp-relay.monitors.j2", "/usr/share/sonic/templates/"]
+COPY ["dhcp-relay.programs.j2", "dhcpv4-relay.agents.j2", "dhcpv4-interface-relay.agents.j2", "dhcpv6-relay.agents.j2", "dhcp-relay.monitors.j2", "/usr/share/sonic/templates/"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 COPY ["cli", "/cli/"]

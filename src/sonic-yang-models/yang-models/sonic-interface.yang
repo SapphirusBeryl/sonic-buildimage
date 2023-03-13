@@ -5,6 +5,10 @@ module sonic-interface {
 	namespace "http://github.com/Azure/sonic-interface";
 	prefix intf;
 
+	import ietf-inet-types {
+		prefix inet;
+	}
+
 	import sonic-types {
 		prefix stypes;
 	}
@@ -79,6 +83,11 @@ module sonic-interface {
                     description "Packet action when a packet ingress and gets routed on the same IP interface";
                     type stypes:loopback_action;
                 }
+
+				leaf-list dhcp_servers {
+					description "Configure the dhcp v4 servers";
+					type inet:ip-address;
+				}
 			}
 			/* end of INTERFACE_LIST */
 
