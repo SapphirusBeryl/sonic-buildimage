@@ -731,6 +731,9 @@ fi
 # Copy docker_image_ctl.j2 for SONiC Package Manager
 sudo cp $BUILD_TEMPLATES/docker_image_ctl.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/docker_image_ctl.j2
 
+# Install version of docker-py that's compatible with newer urllib3
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install "docker==6.1.0"
+
 # Generate shutdown order
 sudo LANG=C DOCKER_HOST="$DOCKER_HOST" chroot $FILESYSTEM_ROOT /usr/local/bin/generate_shutdown_order.py
 
