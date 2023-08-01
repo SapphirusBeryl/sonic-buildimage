@@ -19,9 +19,3 @@ isc-dhcpv4-relay-{{ vlan_name }}
 {% set _dummy = add_preceding_comma.update({'flag': True}) %}
 dhcp6relay
 {% endif %}
-{# Append interface DHCPv4 agents #}
-{% for interface_relay in interface_relays %}
-{% if add_preceding_comma.flag %},{% endif %}
-{% set _dummy = add_preceding_comma.update({'flag': True}) %}
-interface-dhcpv4-relay-{{ loop.index }}
-{% endfor %}
