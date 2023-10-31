@@ -4,7 +4,7 @@
  *
  */
 /*
- * $Copyright: Copyright 2018-2022 Broadcom. All rights reserved.
+ * $Copyright: Copyright 2018-2021 Broadcom. All rights reserved.
  * The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries.
  * 
  * This program is free software; you can redistribute it and/or
@@ -212,8 +212,8 @@ bcmcnet_pdma_rx_queue_setup(struct pdma_dev *dev, int queue)
     }
 
     if (dev->mode == DEV_MODE_VNET) {
-        ctrl->vsync.rx_ring_addr[rxq->chan_id] = rxq->ring_addr;
-        ctrl->vsync.rx_ring_size[rxq->chan_id] = rxq->nb_desc;
+        ctrl->vsync.rx_ring_addr[queue] = rxq->ring_addr;
+        ctrl->vsync.rx_ring_size[queue] = rxq->nb_desc;
     }
 
     rxq->state |= PDMA_RX_QUEUE_SETUP;
@@ -273,12 +273,14 @@ bcmcnet_pdma_rx_vqueue_setup(struct pdma_dev *dev, int queue)
         return SHR_E_NONE;
     }
 
-    if (dev->ctrl.vsync.rx_ring_addr[vrxq->chan_id]) {
+    if (dev->ctrl.vsync.rx_ring_addr[queue]) {
         vrxq->curr = 0;
-        vrxq->nb_desc = dev->ctrl.vsync.rx_ring_size[vrxq->chan_id];
-        vrxq->ring_addr = dev->ctrl.vsync.rx_ring_addr[vrxq->chan_id];
+        vrxq->nb_desc = dev->ctrl.vsync.rx_ring_size[queue];
+        vrxq->ring_addr = dev->ctrl.vsync.rx_ring_addr[queue];
         vrxq->ring = dev->sys_p2v(dev, vrxq->ring_addr);
         vrxq->state |= PDMA_RX_QUEUE_SETUP;
+    } else {
+        return SHR_E_UNAVAIL;
     }
 
     return SHR_E_NONE;
@@ -329,8 +331,8 @@ bcmcnet_pdma_tx_queue_setup(struct pdma_dev *dev, int queue)
     }
 
     if (dev->mode == DEV_MODE_VNET) {
-        ctrl->vsync.tx_ring_addr[txq->chan_id] = txq->ring_addr;
-        ctrl->vsync.tx_ring_size[txq->chan_id] = txq->nb_desc;
+        ctrl->vsync.tx_ring_addr[queue] = txq->ring_addr;
+        ctrl->vsync.tx_ring_size[queue] = txq->nb_desc;
     }
 
     txq->state |= PDMA_TX_QUEUE_SETUP;
@@ -390,13 +392,15 @@ bcmcnet_pdma_tx_vqueue_setup(struct pdma_dev *dev, int queue)
         return SHR_E_NONE;
     }
 
-    if (dev->ctrl.vsync.tx_ring_addr[vtxq->chan_id]) {
+    if (dev->ctrl.vsync.tx_ring_addr[queue]) {
         vtxq->curr = 0;
         vtxq->dirt = 0;
-        vtxq->nb_desc = dev->ctrl.vsync.tx_ring_size[vtxq->chan_id];
-        vtxq->ring_addr = dev->ctrl.vsync.tx_ring_addr[vtxq->chan_id];
+        vtxq->nb_desc = dev->ctrl.vsync.tx_ring_size[queue];
+        vtxq->ring_addr = dev->ctrl.vsync.tx_ring_addr[queue];
         vtxq->ring = dev->sys_p2v(dev, vtxq->ring_addr);
         vtxq->state |= PDMA_TX_QUEUE_SETUP;
+    } else {
+        return SHR_E_UNAVAIL;
     }
 
     return SHR_E_NONE;
@@ -584,8 +588,7 @@ bcmcnet_pdma_group_poll(struct pdma_dev *dev, int group, int budget)
             if (hw->hdls.chan_intr_query(hw, rxq->chan_id)) {
                 hw->hdls.chan_clear(hw, rxq->chan_id);
                 grp->poll_queues |= 1 << i;
-            }
-            if (rxq->state & PDMA_RX_QUEUE_BUSY) {
+            } else if (rxq->state & PDMA_RX_QUEUE_BUSY) {
                 rxq->state &= ~PDMA_RX_QUEUE_BUSY;
                 grp->poll_queues |= 1 << i;
             }
@@ -595,10 +598,6 @@ bcmcnet_pdma_group_poll(struct pdma_dev *dev, int group, int budget)
         if (txq->state & PDMA_TX_QUEUE_ACTIVE) {
             if (hw->hdls.chan_intr_query(hw, txq->chan_id)) {
                 hw->hdls.chan_clear(hw, txq->chan_id);
-                grp->poll_queues |= 1 << i;
-            }
-            if (txq->state & PDMA_TX_QUEUE_BUSY) {
-                txq->state &= ~PDMA_TX_QUEUE_BUSY;
                 grp->poll_queues |= 1 << i;
             }
         }
@@ -665,9 +664,7 @@ bcmcnet_pdma_rx_ring_dump(struct pdma_dev *dev, int queue)
     }
     if (dev->mode == DEV_MODE_HNET) {
         rxq = (struct pdma_rx_queue *)ctrl->vnet_rxq[queue];
-        if (rxq->state & PDMA_RX_QUEUE_SETUP) {
-            hw->dops.rx_ring_dump(hw, rxq);
-        }
+        hw->dops.rx_ring_dump(hw, rxq);
     }
 
     return SHR_E_NONE;
@@ -693,9 +690,7 @@ bcmcnet_pdma_tx_ring_dump(struct pdma_dev *dev, int queue)
     }
     if (dev->mode == DEV_MODE_HNET) {
         txq = (struct pdma_tx_queue *)ctrl->vnet_txq[queue];
-        if (txq->state & PDMA_TX_QUEUE_SETUP) {
-            hw->dops.tx_ring_dump(hw, txq);
-        }
+        hw->dops.tx_ring_dump(hw, txq);
     }
 
     return SHR_E_NONE;
