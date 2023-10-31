@@ -62,7 +62,7 @@ endif
 
 export SDK
 
-override kernel_version=5_10
+override kernel_version=5_4
 platform=gts
 
 LINUX_MAKE_USER=1

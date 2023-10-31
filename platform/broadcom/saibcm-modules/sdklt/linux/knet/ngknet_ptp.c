@@ -4,7 +4,7 @@
  *
  */
 /*
- * $Copyright: Copyright 2018-2022 Broadcom. All rights reserved.
+ * $Copyright: Copyright 2018-2021 Broadcom. All rights reserved.
  * The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries.
  * 
  * This program is free software; you can redistribute it and/or
@@ -36,10 +36,11 @@ ngknet_ptp_rx_config_set(struct net_device *ndev, int *filter)
     /*
      * The expected Rx filter value is passed to the callback. The callback
      * should pass back the actual filter value by the paramter <filter>.
-     * The callback can use netif->user_data to get other private parameters
-     * like phys_port which should be introduced when the netif is created.
+     * The callback can use priv->user_data to get other private parameters
+     * such as phys_port, dev_type, etc, which should be introduced when the
+     * netif is created.
      */
-    return dev->cbc->ptp_rx_config_set_cb(&dev->dev_info, &priv->netif, filter);
+    return dev->cbc->ptp_rx_config_set_cb(priv, filter);
 }
 
 int
@@ -55,10 +56,11 @@ ngknet_ptp_tx_config_set(struct net_device *ndev, int type)
     /*
      * The Tx type value is passed to the callback by the parameter <type>.
      * The callback should do the configuration according to the type.
-     * The callback can use netif->user_data to get other private parameters
-     * like phys_port which should be introduced when the netif is created.
+     * The callback can use priv->user_data to get other private parameters
+     * such as phys_port, dev_type, etc, which should be introduced when the
+     * netif is created.
      */
-    return dev->cbc->ptp_tx_config_set_cb(&dev->dev_info, &priv->netif, &type);
+    return dev->cbc->ptp_tx_config_set_cb(priv, &type);
 }
 
 int
@@ -73,8 +75,9 @@ ngknet_ptp_rx_hwts_get(struct net_device *ndev, struct sk_buff *skb, uint64_t *t
         return SHR_E_UNAVAIL;
     }
 
-    cbd->dinfo = &dev->dev_info;
-    cbd->netif = &priv->netif;
+    cbd->dev_no = dev->dev_no;
+    cbd->dev_id = dev->pdma_dev.dev_id;
+    cbd->priv = priv;
     cbd->pmd = skb->data + PKT_HDR_SIZE;
     cbd->pmd_len = pkh->meta_len;
     cbd->pkt_len = pkh->data_len;
@@ -84,8 +87,7 @@ ngknet_ptp_rx_hwts_get(struct net_device *ndev, struct sk_buff *skb, uint64_t *t
      * by the parameter <ts>.
      * Some parameters have been consolidated to SKB as above. They can be
      * achieved by NGKNET_SKB_CB(skb). Specially more private paramters are
-     * in NGKNET_SKB_CB(skb)->dinfo or NGKNET_SKB_CB(skb)->netif->user_data
-     * such as dev_type, phys_port and so on.
+     * in NGKNET_SKB_CB(skb)->priv->user_data[].
      */
     return dev->cbc->ptp_rx_hwts_get_cb(skb, ts);
 }
@@ -102,8 +104,9 @@ ngknet_ptp_tx_hwts_get(struct net_device *ndev, struct sk_buff *skb, uint64_t *t
         return SHR_E_UNAVAIL;
     }
 
-    cbd->dinfo = &dev->dev_info;
-    cbd->netif = &priv->netif;
+    cbd->dev_no = dev->dev_no;
+    cbd->dev_id = dev->pdma_dev.dev_id;
+    cbd->priv = priv;
     cbd->pmd = skb->data + PKT_HDR_SIZE;
     cbd->pmd_len = pkh->meta_len;
     cbd->pkt_len = pkh->data_len;
@@ -117,8 +120,8 @@ ngknet_ptp_tx_hwts_get(struct net_device *ndev, struct sk_buff *skb, uint64_t *t
      * been tranmitted out from port.
      * Some parameters have been consolidated to SKB as above. They can be
      * achieved by NGKNET_SKB_CB(skb). Specially more private paramters are
-     * in NGKNET_SKB_CB(skb)->dinfo or NGKNET_SKB_CB(skb)->netif->user_data
-     * such as dev_type, phys_port and so on.
+     * in NGKNET_SKB_CB(skb)->priv->user_data[] such as phys_port, dev_type,
+     * and so on.
      */
     return dev->cbc->ptp_tx_hwts_get_cb(skb, ts);
 }
@@ -135,8 +138,9 @@ ngknet_ptp_tx_meta_set(struct net_device *ndev, struct sk_buff *skb)
         return SHR_E_UNAVAIL;
     }
 
-    cbd->dinfo = &dev->dev_info;
-    cbd->netif = &priv->netif;
+    cbd->dev_no = dev->dev_no;
+    cbd->dev_id = dev->pdma_dev.dev_id;
+    cbd->priv = priv;
     cbd->pmd = skb->data + PKT_HDR_SIZE;
     cbd->pmd_len = pkh->meta_len;
     cbd->pkt_len = pkh->data_len;
@@ -146,8 +150,8 @@ ngknet_ptp_tx_meta_set(struct net_device *ndev, struct sk_buff *skb)
      * for HW timestamping according to the corresponding switch device.
      * Some parameters have been consolidated to SKB as above. They can be
      * achieved by NGKNET_SKB_CB(skb). Specially more private paramters are
-     * in NGKNET_SKB_CB(skb)->dinfo or NGKNET_SKB_CB(skb)->netif->user_data
-     * such as dev_type, phys_port and so on.
+     * in NGKNET_SKB_CB(skb)->priv->user_data[] such as phys_port, dev_type,
+     * and so on.
      */
     return dev->cbc->ptp_tx_meta_set_cb(skb);
 }
@@ -164,10 +168,11 @@ ngknet_ptp_phc_index_get(struct net_device *ndev, int *index)
 
     /*
      * The callback should return the HPC index by the parameter <index>.
-     * netif->user_data can be used to get other private parameters such as
-     * phys_port which should be introduced when the netif is created.
+     * priv->user_data[] can be used to get other private parameters such as
+     * phys_port, dev_type, etc, which should be introduced when the netif is
+     * created.
      */
-    return dev->cbc->ptp_phc_index_get_cb(&dev->dev_info, &priv->netif, index);
+    return dev->cbc->ptp_phc_index_get_cb(priv, index);
 }
 
 int
@@ -178,12 +183,12 @@ ngknet_ptp_dev_ctrl(struct ngknet_dev *dev, int cmd, char *data, int len)
     }
 
     /*
-     * The callback is IOCTL dispatcher for PTP kernel driver/module.
+     * The callback is IOCTL dispatcher for PTP driver/module.
      * The parameter <cmd> is the command defined by the user. The parameter
      * <data> and <len> are used for interactions between the user application
      * and the driver for PTP device start/stop, enable/disable, set/get, and
      * so on.
      */
-    return dev->cbc->ptp_dev_ctrl_cb(&dev->dev_info, cmd, data, len);
+    return dev->cbc->ptp_dev_ctrl_cb(dev, cmd, data, len);
 }
 
