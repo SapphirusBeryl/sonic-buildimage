@@ -14,6 +14,9 @@ MIRROR_VERSION_FILE=
 DEFAULT_MIRROR_URLS=http://debian-archive.trafficmanager.net/debian/,http://packages.trafficmanager.net/debian/debian/
 DEFAULT_MIRROR_SECURITY_URLS=http://debian-archive.trafficmanager.net/debian-security/,http://packages.trafficmanager.net/debian/debian-security/
 
+if [ "$DISTRIBUTION" == "buster" ]; then
+  DEFAULT_MIRROR_URLS=http://archive.debian.org/debian/,http://packages.trafficmanager.net/debian/debian/
+fi
 
 # The debian-archive.trafficmanager.net does not support armhf, use debian.org instead
 if [ "$ARCHITECTURE" == "armhf" ]; then
