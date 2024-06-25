@@ -1,5 +1,4 @@
 import os
-import ast
 import imp
 import yaml
 import subprocess
@@ -57,7 +56,7 @@ class Common:
             cleaned_input = input_translator.get(input)
 
         elif type(input_translator) is str:
-            cleaned_input = ast.literal_eval(input_translator.format(input))
+            cleaned_input = eval(input_translator.format(input))
 
         return cleaned_input
 
@@ -67,9 +66,9 @@ class Common:
         if type(output_translator) is dict:
             output = output_translator.get(output)
         elif type(output_translator) is str:
-            output = ast.literal_eval(output_translator.format(output))
+            output = eval(output_translator.format(output))
         elif type(output_translator) is list:
-            output = ast.literal_eval(output_translator[index].format(output))
+            output = eval(output_translator[index].format(output))
 
         return output
 
